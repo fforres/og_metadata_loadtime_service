@@ -19,20 +19,49 @@ var port = 3000;
 
 var server = _http2.default.createServer(function (req, res) {
   var parsedUrl = _url2.default.parse(req.url, true);
-  if (parsedUrl.pathname == '/API' && parsedUrl.query.url) {
-    start(parsedUrl)
-      .then(function (data) {
-        console.log(data);
-      });
+  console.log('WE GOT HIT');
+  if (parsedUrl.pathname.toLowerCase() === '/api' && parsedUrl.query.url) {
+    console.log('WE GOT HIT @ THE API ENDPOINT');
+    start(parsedUrl).then(function (data) {
+      console.log(data);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(data));
+      res.end();
+    }).catch(function (e) {
+      var errorData = {
+        msg: 'We could not finish your request',
+        error: e
+      };
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.write(JSON.stringify(errorData));
+      res.end();
+    });
   }
 });
 
 var start = function start(parsedUrl) {
   return Promise.all([(0, _crawler.startCrawling)(parsedUrl.query.url), (0, _nightmare.startLoading)(parsedUrl.query.url)]).then(function (data) {
-    console.log(data);
+    return new Promise(function (resolve, reject) {
+      resolve({
+        "mobile­friendly": data[0].mobile,
+        "title": data[0].title,
+        "description": data[0].description,
+        "imageURL": data[0].image,
+        "loadTime": data[1]
+      });
+    });
   });
 };
 
+if (process.env.NODE_ENV === 'development') {
+  start({
+    query: {
+      url: 'http://www.lunametrics.com/blog/2017/02/02/unlimited-data-studio-reports/'
+    }
+  }).then(function (data) {
+    console.log(data);
+  });
+}
 
 server.listen(port, hostname, function () {
   console.log('Server running at http://' + hostname + ':' + port + '/');
