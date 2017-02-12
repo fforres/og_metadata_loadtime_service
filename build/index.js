@@ -20,7 +20,10 @@ var port = 3000;
 var server = _http2.default.createServer(function (req, res) {
   var parsedUrl = _url2.default.parse(req.url, true);
   if (parsedUrl.pathname == '/API' && parsedUrl.query.url) {
-    start(parsedUrl);
+    start(parsedUrl)
+      .then(function (data) {
+        console.log(data);
+      });
   }
 });
 
@@ -30,11 +33,6 @@ var start = function start(parsedUrl) {
   });
 };
 
-start({
-  query: {
-    url: 'http://www.lunametrics.com/blog/2017/02/02/unlimited-data-studio-reports/'
-  }
-});
 
 server.listen(port, hostname, function () {
   console.log('Server running at http://' + hostname + ':' + port + '/');

@@ -64,17 +64,47 @@ var getDom = exports.getDom = function getDom(parsedUrl) {
 var parseHeaders = function parseHeaders(data) {
   return new Promise(function (resolve, reject) {
     var document = _parse2.default.parse(data);
+    /*
+      TODO: We should chain this into promises for easy error handling
+        findDomNode('html', document)
+        .then((html) => findDomNode('head', html))
+        .then((head) => findDomNode('meta', head))
+        .then( (...) )
+        .catch()
+    */
     var html = findDomNode('html', document);
     var head = findDomNode('head', html);
     var meta = findDomNodes('meta', head);
+
+    // TODO: parse Stylesheets and check for media queries.
+    var mobile = checkMetasForMobile(meta); //TODO: Change this to a "batch" search
     var image = findContentByAttribute('og:image', 'property', meta); //TODO: Change this to a "batch" search
     var title = findContentByAttribute('og:title', 'property', meta); //TODO: Change this to a "batch" search
     var name = findContentByAttribute('og:site_name', 'property', meta); //TODO: Change this to a "batch" search
     var description = findContentByAttribute('description', 'name', meta); //TODO: Change this to a "batch" search
-    resolve(image);
+    resolve({ image: image, title: title, name: name, description: description, mobile: mobile });
   });
 };
 
+var checkMetasForMobile = function checkMetasForMobile(metaTags) {
+  //TODO: CHECK: We could use something like this: https://gist.github.com/shahariaazam/73c0644c6b2f2cba5ca2#file-google-mobile-friendliness-test-php/
+  //'https://www.googleapis.com/pagespeedonline/v3beta1/mobileReady?key='.$apiKey.'&url='.$url.'&strategy=mobile'
+  var viewPort = findContentByAttribute('viewport', 'name', metaTags);
+  var parsedViewportAttribute = {};
+  viewPort.split(',').forEach(function (el) {
+    var splitted = el.split('=');
+    parsedViewportAttribute[splitted[0].trim()] = splitted[1].trim();
+  });
+  var checker = ['width', 'device-width'];
+  if (parsedViewportAttribute[checker[0]] && parsedViewportAttribute[checker[1]]) {
+    // TODO: This should have more depth
+    return true;
+  } else {
+    return false;
+  }
+};
+
+// This goes tyhrough every meta-tag and extract a specific meta tag content
 var findContentByAttribute = function findContentByAttribute(attributeName, attribute, nodes) {
   var image = null;
   for (var j = 0; j < nodes.length; j++) {

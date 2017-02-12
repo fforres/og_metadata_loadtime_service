@@ -10,9 +10,9 @@ const server = http.createServer((req, res) => {
   let parsedUrl = url.parse(req.url, true);
   if (parsedUrl.pathname == '/API' && parsedUrl.query.url) {
     start(parsedUrl)
-    .then(data => {
-      console.log(data)
-    })
+      .then(data => {
+        console.log(data)
+      })
   }
 });
 
@@ -20,7 +20,6 @@ const start = (parsedUrl) => Promise.all([
   startCrawling(parsedUrl.query.url),
   startLoading(parsedUrl.query.url)
 ])
-
 
 if(process.env.NODE_ENV==='development') {
   start({
