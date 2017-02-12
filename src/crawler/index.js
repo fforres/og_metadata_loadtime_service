@@ -36,16 +36,47 @@ export const getDom = (parsedUrl) => new Promise ((resolve, reject) => {
 
 const parseHeaders = (data) => new Promise ((resolve, reject) => {
   const document = parse5.parse(data);
+  /*
+    TODO: We should chain this into promises for easy error handling
+      findDomNode('html', document)
+      .then((html) => findDomNode('head', html))
+      .then((head) => findDomNode('meta', head))
+      .then( (...) )
+      .catch()
+  */
   const html = findDomNode('html', document);
   const head = findDomNode('head', html);
-  const meta = findDomNodes('meta', head);
+  const meta = findDomNodes('meta', head)
+
+  // TODO: parse Stylesheets and check for media queries.
+  const mobile = checkMetasForMobile(meta); //TODO: Change this to a "batch" search
   const image = findContentByAttribute('og:image','property', meta); //TODO: Change this to a "batch" search
   const title = findContentByAttribute('og:title','property', meta); //TODO: Change this to a "batch" search
   const name = findContentByAttribute('og:site_name','property', meta); //TODO: Change this to a "batch" search
   const description = findContentByAttribute('description','name', meta); //TODO: Change this to a "batch" search
-  resolve(image)
+  resolve({image, title, name, description, mobile})
 })
 
+const checkMetasForMobile = (metaTags) => { //TODO: CHECK: We could use something like this: https://gist.github.com/shahariaazam/73c0644c6b2f2cba5ca2#file-google-mobile-friendliness-test-php/
+  //'https://www.googleapis.com/pagespeedonline/v3beta1/mobileReady?key='.$apiKey.'&url='.$url.'&strategy=mobile'
+  const viewPort = findContentByAttribute('viewport', 'name', metaTags);
+  const parsedViewportAttribute = {};
+  viewPort.split(',').forEach((el) => {
+    const splitted = el.split('=');
+    parsedViewportAttribute[splitted[0].trim()] = splitted[1].trim();
+  })
+  var checker = [
+    'width',
+    'device-width'
+  ];
+  if(parsedViewportAttribute[checker[0]] && parsedViewportAttribute[checker[1]]) { // TODO: This should have more depth
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// This goes tyhrough every meta-tag and extract a specific meta tag content
 const findContentByAttribute = (attributeName, attribute, nodes) => {
   var image = null;
   for (let j = 0; j < nodes.length; j++) {

@@ -10,6 +10,10 @@ const server = http.createServer((req, res) => {
   let parsedUrl = url.parse(req.url, true);
   if (parsedUrl.pathname == '/API' && parsedUrl.query.url) {
     start(parsedUrl)
+      .then(data => {
+        console.log(data)
+      })
+
   }
 });
 
@@ -18,12 +22,6 @@ const start = (parsedUrl) => Promise.all([
   startLoading(parsedUrl.query.url)
 ]).then(data => {
   console.log(data)
-})
-
-start({
-  query: {
-    url: 'http://www.lunametrics.com/blog/2017/02/02/unlimited-data-studio-reports/'
-  }
 })
 
 server.listen(port, hostname, () => {
