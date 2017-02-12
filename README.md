@@ -13,4 +13,4 @@
 1. Clone/Download
 2. `yarn` or `npm install`
 3. run `npm start`
-3. hit `http://localhost:3000/api`
+3. hit `http://localhost:3000/api?url=http://www.lunametrics.com/blog/2017/02/02/unlimited-data-studio-reports/`
