@@ -3,14 +3,15 @@ import http from 'http';
 import https from 'https';
 import parse5 from 'parse5';
 import Timer from '../timer';
+import d from 'Debug';
+
+const debug = d('crawler');
 
 export const startCrawling = (urlToCrawl) => {
   const parsedUrl = url.parse(urlToCrawl);
   return getDom(parsedUrl)
-    .then(data => {
-      return parseHeaders(data)
-    })
-    .catch(e => console.error(e));
+    .then(data => parseHeaders(data))
+    .catch(e => debug('_ %s %o',e, parsedUrl.protocol));
 }
 
 export const getDom = (parsedUrl) => new Promise ((resolve, reject) => {
@@ -31,7 +32,10 @@ export const getDom = (parsedUrl) => new Promise ((resolve, reject) => {
         reject(e.message);
       }
     });
+  }).on('error', (e) => {
+    reject(e)
   })
+
 })
 
 const parseHeaders = (data) => new Promise ((resolve, reject) => {
@@ -61,16 +65,21 @@ const checkMetasForMobile = (metaTags) => { //TODO: CHECK: We could use somethin
   //'https://www.googleapis.com/pagespeedonline/v3beta1/mobileReady?key='.$apiKey.'&url='.$url.'&strategy=mobile'
   const viewPort = findContentByAttribute('viewport', 'name', metaTags);
   const parsedViewportAttribute = {};
-  viewPort.split(',').forEach((el) => {
-    const splitted = el.split('=');
-    parsedViewportAttribute[splitted[0].trim()] = splitted[1].trim();
-  })
-  var checker = [
-    'width',
-    'device-width'
-  ];
-  if(parsedViewportAttribute[checker[0]] && parsedViewportAttribute[checker[1]]) { // TODO: This should have more depth
-    return true;
+  if (viewPort) {
+    viewPort.split(',').forEach((el) => {
+      const splitted = el.split('=');
+      parsedViewportAttribute[splitted[0].trim()] = splitted[1].trim();
+    })
+    var checker = [
+      'width',
+      'initial-scale'
+    ];
+    debug('%o', parsedViewportAttribute)
+    if(parsedViewportAttribute[checker[0]] && parsedViewportAttribute[checker[1]]) { // TODO: This should have more depth
+      return true;
+    } else {
+      return false;
+    }
   } else {
     return false;
   }
@@ -78,7 +87,7 @@ const checkMetasForMobile = (metaTags) => { //TODO: CHECK: We could use somethin
 
 // This goes tyhrough every meta-tag and extract a specific meta tag content
 const findContentByAttribute = (attributeName, attribute, nodes) => {
-  var image = null;
+  var data = null;
   for (let j = 0; j < nodes.length; j++) {
     let nodeAttrs = nodes[j].attrs;
     let theMetaTag = null;
@@ -93,11 +102,11 @@ const findContentByAttribute = (attributeName, attribute, nodes) => {
       }
     }
     if(property && property.toLowerCase() === attributeName) {
-      image = content
+      data = content
       break;
     }
   }
-  return image;
+  return data;
 }
 
 

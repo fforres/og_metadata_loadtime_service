@@ -9,12 +9,13 @@
     "test": "ava",
     "test:watch": "cross-env NODE_ENV=test ava ./src/test/test.*.js --watch",
     "start": "cross-env NODE_ENV=production node build",
-    "start:dev:babel": "cross-env NODE_ENV=development babel-watch ./src/index.js"
+    "start:dev:babel": "cross-env NODE_ENV=development DEBUG=*,-babel,-nightmare* babel-watch ./src/index.js"
   },
   "dependencies": {
     "babel-watch": "^2.0.6",
     "cheerio": "^0.22.0",
     "cross-env": "^3.1.4",
+    "debug": "^2.6.1",
     "nightmare": "^2.9.1",
     "parse5": "^3.0.1",
     "rimraf": "^2.5.4"
@@ -45,6 +46,12 @@
       "es2015",
       "stage-0"
     ]
+  },
+  "eslintrc": {
+    "parser": "babel-eslint",
+    "rules": {
+      "strict": 0
+    }
   },
   "ava": {
     "require": "babel-core/register"
