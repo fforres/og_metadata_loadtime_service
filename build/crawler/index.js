@@ -25,14 +25,20 @@ var _timer = require('../timer');
 
 var _timer2 = _interopRequireDefault(_timer);
 
+var _Debug = require('Debug');
+
+var _Debug2 = _interopRequireDefault(_Debug);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var debug = (0, _Debug2.default)('crawler');
 
 var startCrawling = exports.startCrawling = function startCrawling(urlToCrawl) {
   var parsedUrl = _url2.default.parse(urlToCrawl);
   return getDom(parsedUrl).then(function (data) {
     return parseHeaders(data);
   }).catch(function (e) {
-    return console.error(e);
+    return debug('_ %s %o', e, parsedUrl.protocol);
   });
 };
 
@@ -57,6 +63,8 @@ var getDom = exports.getDom = function getDom(parsedUrl) {
           reject(e.message);
         }
       });
+    }).on('error', function (e) {
+      reject(e);
     });
   });
 };
@@ -91,14 +99,19 @@ var checkMetasForMobile = function checkMetasForMobile(metaTags) {
   //'https://www.googleapis.com/pagespeedonline/v3beta1/mobileReady?key='.$apiKey.'&url='.$url.'&strategy=mobile'
   var viewPort = findContentByAttribute('viewport', 'name', metaTags);
   var parsedViewportAttribute = {};
-  viewPort.split(',').forEach(function (el) {
-    var splitted = el.split('=');
-    parsedViewportAttribute[splitted[0].trim()] = splitted[1].trim();
-  });
-  var checker = ['width', 'device-width'];
-  if (parsedViewportAttribute[checker[0]] && parsedViewportAttribute[checker[1]]) {
-    // TODO: This should have more depth
-    return true;
+  if (viewPort) {
+    viewPort.split(',').forEach(function (el) {
+      var splitted = el.split('=');
+      parsedViewportAttribute[splitted[0].trim()] = splitted[1].trim();
+    });
+    var checker = ['width', 'initial-scale'];
+    debug('%o', parsedViewportAttribute);
+    if (parsedViewportAttribute[checker[0]] && parsedViewportAttribute[checker[1]]) {
+      // TODO: This should have more depth
+      return true;
+    } else {
+      return false;
+    }
   } else {
     return false;
   }
@@ -106,7 +119,7 @@ var checkMetasForMobile = function checkMetasForMobile(metaTags) {
 
 // This goes tyhrough every meta-tag and extract a specific meta tag content
 var findContentByAttribute = function findContentByAttribute(attributeName, attribute, nodes) {
-  var image = null;
+  var data = null;
   for (var j = 0; j < nodes.length; j++) {
     var nodeAttrs = nodes[j].attrs;
     var theMetaTag = null;
@@ -121,11 +134,11 @@ var findContentByAttribute = function findContentByAttribute(attributeName, attr
       }
     }
     if (property && property.toLowerCase() === attributeName) {
-      image = content;
+      data = content;
       break;
     }
   }
-  return image;
+  return data;
 };
 
 var findDomNode = function findDomNode(domName, subDom) {
